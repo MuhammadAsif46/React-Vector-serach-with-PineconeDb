@@ -9,6 +9,9 @@ const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 10)
 const db = client.db("dbcrud"); // create database  // document base database
 const col = db.collection("posts"); // create collection
 
+const pcIndex = pineconeClient.Index(process.env.PINECONE_INDEX_NAME);
+console.log("process.env.PINECONE_INDEX_NAME: ", process.env.PINECONE_INDEX_NAME);
+
 let router = express.Router();
 
 
@@ -44,6 +47,18 @@ router.post("/post", async (req, res, next) => {
 
     const vector = response?.data[0]?.embedding;
     console.log("vector: ", vector);
+
+    const upsertResponse = await pcIndex.upsert([{
+
+      id: nanoid(), // unique id
+      values: vector,
+      metadata: {
+          title: req.body.title,
+          text: req.body.text,
+          createdOn: new Date().getTime()
+      },
+  }]);
+  console.log("upsertResponse: ", upsertResponse);
 
     res.send({ message: "post created" });
 
