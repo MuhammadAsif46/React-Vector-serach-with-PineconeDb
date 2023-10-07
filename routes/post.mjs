@@ -26,14 +26,14 @@ router.post("/post", async (req, res, next) => {
   }
 
   try {
-    const insertResponse = await col.insertOne({
-        // _id: "7864972364724b4h2b4jhgh42",
-        title: req.body.title,
-        text: req.body.text,
-        createdOn: new Date()
-    });
+    // const insertResponse = await col.insertOne({
+    //     // _id: "7864972364724b4h2b4jhgh42",
+    //     title: req.body.title,
+    //     text: req.body.text,
+    //     createdOn: new Date()
+    // });
 
-    console.log("insertResponse : ", insertResponse);
+    // console.log("insertResponse : ", insertResponse);
 
     res.send({ message: "post created" });
   } catch (err) {
