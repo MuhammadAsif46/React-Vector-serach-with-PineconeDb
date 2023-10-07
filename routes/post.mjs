@@ -70,19 +70,48 @@ router.post("/post", async (req, res, next) => {
 // GET     /api/v1/posts
 router.get("/posts", async (req, res, next) => {
 
-  const cursor = col.find({})
-  .sort({ _id: -1 })
-  .limit(100);
+  // const cursor = col.find({})
+  // .sort({ _id: -1 })
+  // .limit(100);
 
+
+  // try {
+  //   let results = await cursor.toArray();
+  //   console.log("results: ", results);
+  //   res.send(results);
+    
+  // } catch (err) {
+  //   console.log(" error getting data mongodb : ", err);
+  //   res.status(500).send({ message :"server error, please try later.." });
+  // }
 
   try {
-    let results = await cursor.toArray();
-    console.log("results: ", results);
-    res.send(results);
-    
+    const response = await openaiClient.embeddings.create({
+      model: "text-embedding-ada-002",
+      input: "",
+    });
+    const vector = response?.data[0].embedding;
+    console.log("vector: ", vector);
+
+    const queryResponse = await pcIndex.query({
+      vector: vector,
+      // id: "vec1",
+      topK: 10000,
+      includeValues: true,
+      includeMetadata: true
+  });
+
+  queryResponse.matches.map(eachMatch => {
+    console.log(`score ${eachMatch.score.toFixed(1)} => ${JSON.stringify(eachMatch.metadata)}\n\n`);
+
+  })
+
+  console.log(`${queryResponse.matches.length} records found `);
+  console.log("queryResponse: ", queryResponse);
+
   } catch (err) {
-    console.log(" error getting data mongodb : ", err);
-    res.status(500).send({ message :"server error, please try later.." });
+    console.log(err);
+    
   }
 });
 
