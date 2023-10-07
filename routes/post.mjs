@@ -1,8 +1,10 @@
 import express from "express";
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
 import { client } from "./../mongodb.mjs";
 import { ObjectId } from "mongodb";
 import pineconeClient , { openai as openaiClient } from "../pinecone.mjs";
+
+const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 10)
 
 const db = client.db("dbcrud"); // create database  // document base database
 const col = db.collection("posts"); // create collection
@@ -33,10 +35,18 @@ router.post("/post", async (req, res, next) => {
     //     text: req.body.text,
     //     createdOn: new Date()
     // });
-
     // console.log("insertResponse : ", insertResponse);
 
+    const response = await openaiClient.embeddings.create({
+      model: "text-embedding-ada-002",
+      input: `${req.body.title} ${req.body.text}`
+    });
+
+    const vector = response?.data[0]?.embedding;
+    console.log("vector: ", vector);
+
     res.send({ message: "post created" });
+
   } catch (err) {
     console.log(" error inserting mongodb : ", err);
     res.status(500).send({ message: "server error, please try later.." });
