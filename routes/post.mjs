@@ -2,6 +2,7 @@ import express from "express";
 import { nanoid } from "nanoid";
 import { client } from "./../mongodb.mjs";
 import { ObjectId } from "mongodb";
+import pineconeClient , { openai as openaiClient } from "../pinecone.mjs";
 
 const db = client.db("dbcrud"); // create database  // document base database
 const col = db.collection("posts"); // create collection
