@@ -48,7 +48,6 @@ router.post("/post", async (req, res, next) => {
     console.log("vector: ", vector);
 
     const upsertResponse = await pcIndex.upsert([{
-
       id: nanoid(), // unique id
       values: vector,
       metadata: {
@@ -89,30 +88,30 @@ router.get("/posts", async (req, res, next) => {
       model: "text-embedding-ada-002",
       input: "",
     });
-    const vector = response?.data[0].embedding;
+    const vector = response?.data[0]?.embedding
     console.log("vector: ", vector);
+     // create vector [ 0.0023063174, -0.009358601, 0.01578391, ... , 0.01678391, ]
 
     const queryResponse = await pcIndex.query({
       vector: vector,
       // id: "vec1",
-      topK: 30,
+      topK: 100,
       includeValues: false,
       includeMetadata: true
   });
 
   queryResponse.matches.map(eachMatch => {
     console.log(`score ${eachMatch.score.toFixed(1)} => ${JSON.stringify(eachMatch.metadata)}\n\n`);
+})
+console.log(`${queryResponse.matches.length} records found `);
 
-  })
-  console.log(`${queryResponse.matches.length} records found `);
-  
-  const formattedOutput = queryResponse.matches.map(eachMatch => ({
+const formattedOutput = queryResponse.matches.map(eachMatch => ({
     text: eachMatch?.metadata?.text,
     title: eachMatch?.metadata?.title,
     _id: eachMatch?.id,
 }))
 
-  res.send(formattedOutput);
+res.send(formattedOutput);
 
   } catch (err) {
     console.log("error getting data pinecone: ", err);
@@ -142,7 +141,7 @@ router.get("/search", async (req, res, next) => {
   });
 
   queryResponse.matches.map(eachMatch => {
-    console.log(`score ${eachMatch.score.toFixed(1)} => ${JSON.stringify(eachMatch.metadata)}\n\n`);
+    console.log(`score ${eachMatch.score.toFixed(3)} => ${JSON.stringify(eachMatch.metadata)}\n\n`);
 
   })
   console.log(`${queryResponse.matches.length} records found `);
@@ -241,7 +240,7 @@ router.put("/post/:postId", async(req, res, next) => {
       console.log("upsertResponse: ", upsertResponse);
 
 
-      res.send({ message: 'post created' });
+      res.send({ message: 'post Updated' });
 
   } catch (e) {
       console.log("error inserting mongodb: ", e);
@@ -252,20 +251,25 @@ router.put("/post/:postId", async(req, res, next) => {
 // DELETE  /api/v1/post/:userId/:postId
 router.delete("/post/:postId", async(req, res, next) => {
 
-  if (!ObjectId.isValid(req.params.postId)) {
-    res.status(403).send({ message: "Invalid post id" });
-    return;
-}
+//   if (!ObjectId.isValid(req.params.postId)) {
+//     res.status(403).send({ message: "Invalid post id" });
+//     return;
+// }
 
-  try {
-    const deleteResponse = await col.deleteOne({ _id: new ObjectId(req.params.postId) });
-    console.log("deleteResponse : ", deleteResponse);
+//   try {
+//     const deleteResponse = await col.deleteOne({ _id: new ObjectId(req.params.postId) });
+//     console.log("deleteResponse : ", deleteResponse);
 
-    res.send({ message: "post delete" });
-  } catch (err) {
-    console.log(" error deleting mongodb : ", err);
-    res.status(500).send({ message: "server error, please try later.." });
-  }
+//     res.send({ message: "post delete" });
+//   } catch (err) {
+//     console.log(" error deleting mongodb : ", err);
+//     res.status(500).send({ message: "server error, please try later.." });
+//   }
+
+    const deleteResponse = await pcIndex.deleteOne(req.params.postId)
+      console.log("deleteResponse: ", deleteResponse);
+
+    res.send('post deleted');
 
 });
 
