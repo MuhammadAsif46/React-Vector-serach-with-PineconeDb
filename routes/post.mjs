@@ -95,7 +95,7 @@ router.get("/posts", async (req, res, next) => {
     const queryResponse = await pcIndex.query({
       vector: vector,
       // id: "vec1",
-      topK: 10000,
+      topK: 30,
       includeValues: false,
       includeMetadata: true
   });
@@ -120,6 +120,47 @@ router.get("/posts", async (req, res, next) => {
     
   }
 });
+
+router.get("/search", async (req, res, next) => {
+
+  try {
+    const response = await openaiClient.embeddings.create({
+      model: "text-embedding-ada-002",
+      input: req.query.q,
+    });
+    const vector = response?.data[0].embedding;
+    console.log("vector: ", vector);
+    // Create Vector [ 0.0023063174, -0.009358601, 0.01578391, ... , 0.01678391, ]
+
+    // Insert data in pinecone data base:
+    const queryResponse = await pcIndex.query({
+      vector: vector,
+      // id: "vec1",
+      topK: 20,
+      includeValues: false,
+      includeMetadata: true
+  });
+
+  queryResponse.matches.map(eachMatch => {
+    console.log(`score ${eachMatch.score.toFixed(1)} => ${JSON.stringify(eachMatch.metadata)}\n\n`);
+
+  })
+  console.log(`${queryResponse.matches.length} records found `);
+  
+  const formattedOutput = queryResponse.matches.map(eachMatch => ({
+    text: eachMatch?.metadata?.text,
+    title: eachMatch?.metadata?.title,
+    _id: eachMatch?.id,
+}))
+
+  res.send(formattedOutput);
+
+  } catch (err) {
+    console.log("error getting data pinecone: ", err);
+    res.status(500).send('server error, please try later');
+    
+  }
+})
 
 // GET     /api/v1/post/:postId
 router.get("/post/:postId", async (req, res, next) => {
