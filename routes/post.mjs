@@ -4,6 +4,8 @@ import { client } from "./../mongodb.mjs";
 import { ObjectId } from "mongodb";
 import pineconeClient , { openai as openaiClient } from "../pinecone.mjs";
 
+
+
 const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 10)
 
 const db = client.db("dbcrud"); // create database  // document base database
